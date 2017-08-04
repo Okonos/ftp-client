@@ -12,20 +12,6 @@ import (
 	"strings"
 )
 
-func parseArgs() (addr string) {
-	args := os.Args[1:]
-	if len(args) > 0 && args[0] != "" {
-		host := args[0]
-		port := "21"
-		if len(args) > 1 && args[1] != "" {
-			port = args[1]
-		}
-		addr = fmt.Sprintf("%s:%s", host, port)
-	}
-
-	return
-}
-
 func readInput(prompt string) (text string, err error) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print(prompt)
@@ -33,6 +19,19 @@ func readInput(prompt string) (text string, err error) {
 	if err == nil {
 		text = text[:len(text)-1] // cut the '\n'
 	}
+	return
+}
+
+func parseArgs() (host, port string) {
+	args := os.Args[1:]
+	if len(args) > 0 && args[0] != "" {
+		host = args[0]
+		port = "21"
+		if len(args) > 1 && args[1] != "" {
+			port = args[1]
+		}
+	}
+
 	return
 }
 
@@ -72,15 +71,11 @@ func promptLoop() {
 }
 
 func main() {
-	addr := parseArgs()
-	if addr == "" {
+	host, port := parseArgs()
+	if host == "" {
 		log.Fatal("Host address must be specified")
 	}
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	cmdConn, err := net.DialTCP("tcp", nil, tcpAddr)
+	cmdConn, err := NewConnection(host, port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,19 +83,15 @@ func main() {
 
 	fmt.Println("Connected")
 
-	bufReader := bufio.NewReader(cmdConn)
-	buf, _ := bufReader.ReadString('\n')
-	fmt.Print(buf)
+	cmdConn.ReadLine()
 
 	if name, err := readInput("Name: "); err == nil {
-		cmdConn.Write([]byte("USER " + name + "\r\n"))
-		buf, _ = bufReader.ReadString('\n')
-		fmt.Print(buf)
+		cmdConn.Write("USER " + name)
+		cmdConn.ReadLine()
 
 		if pass, err := readInput("Password: "); err == nil || err == io.EOF {
-			cmdConn.Write([]byte("PASS " + pass + "\r\n"))
-			buf, _ = bufReader.ReadString('\n')
-			fmt.Print(buf)
+			cmdConn.Write("PASS " + pass)
+			cmdConn.ReadLine()
 		} else {
 			log.Fatal(err)
 		}
@@ -112,9 +103,8 @@ func main() {
 		}
 	}
 
-	cmdConn.Write([]byte("PASV\r\n"))
-	buf, _ = bufReader.ReadString('\n')
-	fmt.Print(buf)
+	cmdConn.Write("PASV")
+	buf, _ := cmdConn.ReadLine()
 
 	dataTCPAddr, err := parseHostPort(buf)
 	if err != nil {
@@ -124,15 +114,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmdConn.Write([]byte("LIST\r\n"))
-	buf, _ = bufReader.ReadString('\n')
-	fmt.Print(buf)
+	cmdConn.Write("LIST")
+	cmdConn.ReadLine()
 	dataReader := bufio.NewReader(dataConn)
 	data, _ := ioutil.ReadAll(dataReader)
 	fmt.Print(string(data))
 	dataConn.Close() // defer
-	buf, _ = bufReader.ReadString('\n')
-	fmt.Print(buf)
+	cmdConn.ReadLine()
 
 	promptLoop()
 }
