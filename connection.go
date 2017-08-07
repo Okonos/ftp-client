@@ -13,6 +13,14 @@ type FTPConn struct {
 	buf  *bufio.Reader
 }
 
+// FTPCmdConn : FTP command connection interface
+type FTPCmdConn interface {
+	Read([]byte) (int, error)
+	ReadLine() (string, error)
+	Write(string) (int, error)
+	Exec(string) (string, error)
+}
+
 // NewFTPConn : constructor for connection
 func NewFTPConn(host, port string) (*FTPConn, error) {
 	addr := strings.Join([]string{host, port}, ":")
