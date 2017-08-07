@@ -15,11 +15,9 @@ func cd(cmdConn FTPCmdConn, dir string) {
 }
 
 func ls(cmdConn FTPCmdConn) {
-	buf, _ := cmdConn.Exec("PASV")
-
-	dataConn, err := NewFTPConn(parseHostPort(buf))
+	dataConn, err := cmdConn.NewDataConn() // NewFTPConn(parseHostPort(response))
 	if err != nil {
-		fmt.Println("Could not initialize connection: ", err)
+		fmt.Println("Could not initialize data connection: ", err)
 		return
 	}
 	defer dataConn.Close()

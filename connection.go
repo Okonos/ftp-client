@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -19,6 +20,7 @@ type FTPCmdConn interface {
 	ReadLine() (string, error)
 	Write(string) (int, error)
 	Exec(string) (string, error)
+	NewDataConn() (*FTPConn, error)
 	Close() error
 }
 
@@ -35,6 +37,27 @@ func NewFTPConn(host, port string) (*FTPConn, error) {
 	}
 
 	return &FTPConn{conn: tcpConn, buf: bufio.NewReader(tcpConn)}, nil
+}
+
+// NewDataConn : establish data connection
+func (c *FTPConn) NewDataConn() (*FTPConn, error) {
+	response, err := c.Exec("PASV")
+	if err != nil {
+		return &FTPConn{}, err
+	}
+
+	start, end := strings.Index(response, "(")+1, strings.Index(response, ")")
+	addr := strings.Split(response[start:end], ",")
+	host := strings.Join(addr[:4], ".")
+	var portVal int
+	if upperByte, err := strconv.Atoi(addr[4]); err == nil {
+		portVal += upperByte * 256
+	}
+	if lowerByte, err := strconv.Atoi(addr[5]); err == nil {
+		portVal += lowerByte
+	}
+	port := strconv.Itoa(portVal)
+	return NewFTPConn(host, port)
 }
 
 func (c *FTPConn) Read(b []byte) (n int, err error) {

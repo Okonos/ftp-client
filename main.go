@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -30,21 +29,6 @@ func parseArgs() (host, port string) {
 		}
 	}
 
-	return
-}
-
-func parseHostPort(addr string) (host, port string) {
-	start, end := strings.Index(addr, "(")+1, strings.Index(addr, ")")
-	addrBytes := strings.Split(addr[start:end], ",")
-	host = strings.Join(addrBytes[:4], ".")
-	var portVal int
-	if upperByte, err := strconv.Atoi(addrBytes[4]); err == nil {
-		portVal += upperByte * 256
-	}
-	if lowerByte, err := strconv.Atoi(addrBytes[5]); err == nil {
-		portVal += lowerByte
-	}
-	port = strconv.Itoa(portVal)
 	return
 }
 
