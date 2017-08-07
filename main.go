@@ -53,7 +53,7 @@ func promptLoop(cmdConn FTPCmdConn) {
 		cmd, err := readInput("ftp> ")
 		if err != nil {
 			if err == io.EOF {
-				// TODO disconnect
+				quit(cmdConn)
 				return
 			}
 			log.Fatal(err)
@@ -62,6 +62,9 @@ func promptLoop(cmdConn FTPCmdConn) {
 		switch cmd {
 		case "ls":
 			ls(cmdConn)
+		case "exit", "quit":
+			quit(cmdConn)
+			return
 		default:
 			fmt.Println("Invalid command")
 		}

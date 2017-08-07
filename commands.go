@@ -26,3 +26,7 @@ func ls(cmdConn FTPCmdConn) {
 	fmt.Print(string(data))
 	cmdConn.ReadLine()
 }
+
+func quit(cmdConn FTPCmdConn) {
+	cmdConn.Exec("QUIT")
+}
