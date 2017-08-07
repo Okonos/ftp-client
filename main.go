@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -49,7 +48,7 @@ func parseHostPort(addr string) (host, port string) {
 	return
 }
 
-func promptLoop() {
+func promptLoop(cmdConn FTPCmdConn) {
 	for {
 		cmd, err := readInput("ftp> ")
 		if err != nil {
@@ -62,7 +61,7 @@ func promptLoop() {
 
 		switch cmd {
 		case "ls":
-			return
+			ls(cmdConn)
 		default:
 			fmt.Println("Invalid command")
 		}
@@ -100,18 +99,5 @@ func main() {
 		}
 	}
 
-	buf, _ := cmdConn.Exec("PASV")
-
-	dataConn, err := NewFTPConn(parseHostPort(buf))
-	if err != nil {
-		log.Fatal(err)
-	}
-	cmdConn.Exec("LIST")
-	dataReader := bufio.NewReader(dataConn)
-	data, _ := ioutil.ReadAll(dataReader)
-	fmt.Print(string(data))
-	dataConn.Close() // defer
-	cmdConn.ReadLine()
-
-	promptLoop()
+	promptLoop(cmdConn)
 }
