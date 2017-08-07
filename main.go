@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -35,19 +34,19 @@ func parseArgs() (host, port string) {
 	return
 }
 
-func parseHostPort(addr string) (*net.TCPAddr, error) {
+func parseHostPort(addr string) (host, port string) {
 	start, end := strings.Index(addr, "(")+1, strings.Index(addr, ")")
 	addrBytes := strings.Split(addr[start:end], ",")
-	host := strings.Join(addrBytes[:4], ".")
-	var port int
+	host = strings.Join(addrBytes[:4], ".")
+	var portVal int
 	if upperByte, err := strconv.Atoi(addrBytes[4]); err == nil {
-		port += upperByte * 256
+		portVal += upperByte * 256
 	}
 	if lowerByte, err := strconv.Atoi(addrBytes[5]); err == nil {
-		port += lowerByte
+		portVal += lowerByte
 	}
-	fullAddr := strings.Join([]string{host, strconv.Itoa(port)}, ":")
-	return net.ResolveTCPAddr("tcp", fullAddr)
+	port = strconv.Itoa(portVal)
+	return
 }
 
 func promptLoop() {
@@ -75,7 +74,7 @@ func main() {
 	if host == "" {
 		log.Fatal("Host address must be specified")
 	}
-	cmdConn, err := NewConnection(host, port)
+	cmdConn, err := NewFTPConn(host, port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -86,12 +85,10 @@ func main() {
 	cmdConn.ReadLine()
 
 	if name, err := readInput("Name: "); err == nil {
-		cmdConn.Write("USER " + name)
-		cmdConn.ReadLine()
+		cmdConn.Exec("USER " + name)
 
 		if pass, err := readInput("Password: "); err == nil || err == io.EOF {
-			cmdConn.Write("PASS " + pass)
-			cmdConn.ReadLine()
+			cmdConn.Exec("PASS " + pass)
 		} else {
 			log.Fatal(err)
 		}
@@ -103,19 +100,13 @@ func main() {
 		}
 	}
 
-	cmdConn.Write("PASV")
-	buf, _ := cmdConn.ReadLine()
+	buf, _ := cmdConn.Exec("PASV")
 
-	dataTCPAddr, err := parseHostPort(buf)
+	dataConn, err := NewFTPConn(parseHostPort(buf))
 	if err != nil {
 		log.Fatal(err)
 	}
-	dataConn, err := net.DialTCP("tcp", nil, dataTCPAddr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	cmdConn.Write("LIST")
-	cmdConn.ReadLine()
+	cmdConn.Exec("LIST")
 	dataReader := bufio.NewReader(dataConn)
 	data, _ := ioutil.ReadAll(dataReader)
 	fmt.Print(string(data))
