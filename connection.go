@@ -19,6 +19,7 @@ type FTPCmdConn interface {
 	ReadLine() (string, error)
 	Write(string) (int, error)
 	Exec(string) (string, error)
+	Close() error
 }
 
 // NewFTPConn : constructor for connection

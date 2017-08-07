@@ -50,7 +50,7 @@ func parseHostPort(addr string) (host, port string) {
 
 func promptLoop(cmdConn FTPCmdConn) {
 	for {
-		cmd, err := readInput("ftp> ")
+		input, err := readInput("ftp> ")
 		if err != nil {
 			if err == io.EOF {
 				quit(cmdConn)
@@ -59,7 +59,20 @@ func promptLoop(cmdConn FTPCmdConn) {
 			log.Fatal(err)
 		}
 
-		switch cmd {
+		var cmd, arg string
+		if len(input) > 0 {
+			splitInput := strings.Split(input, " ")
+			cmd = splitInput[0]
+			if len(splitInput) > 1 {
+				arg = splitInput[1]
+			}
+		}
+
+		switch strings.ToLower(cmd) {
+		case "pwd":
+			pwd(cmdConn)
+		case "cd":
+			cd(cmdConn, arg)
 		case "ls":
 			ls(cmdConn)
 		case "exit", "quit":

@@ -6,6 +6,14 @@ import (
 	"io/ioutil"
 )
 
+func pwd(cmdConn FTPCmdConn) {
+	cmdConn.Exec("PWD")
+}
+
+func cd(cmdConn FTPCmdConn, dir string) {
+	cmdConn.Exec("CWD " + dir)
+}
+
 func ls(cmdConn FTPCmdConn) {
 	buf, _ := cmdConn.Exec("PASV")
 
