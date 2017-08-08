@@ -60,7 +60,7 @@ func get(cmdConn FTPCmdConn, filename string) {
 	}
 	defer f.Close()
 
-	buf := make([]byte, 1024)
+	buf := make([]byte, 8192)
 	for {
 		if _, err := dataConn.Read(buf); err != nil {
 			if err != io.EOF {
