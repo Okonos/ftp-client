@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 )
 
 func pwd(cmdConn FTPCmdConn) {
@@ -30,6 +32,50 @@ func ls(cmdConn FTPCmdConn) {
 		return
 	}
 	fmt.Print(string(data))
+	cmdConn.ReadLine()
+}
+
+func get(cmdConn FTPCmdConn, filename string) {
+	dataConn, err := cmdConn.NewDataConn()
+	if err != nil {
+		fmt.Println("Could not initialize data connection: ", err)
+		return
+	}
+	defer dataConn.Close()
+
+	resp, err := cmdConn.Exec("RETR " + filename)
+	if err != nil {
+		fmt.Println("Error sending command: ", err)
+		return
+	}
+	// check for negative reply
+	if resp[0] == '4' || resp[0] == '5' {
+		return
+	}
+
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Println("Error creating file: ", err)
+		return
+	}
+	defer f.Close()
+
+	buf := make([]byte, 1024)
+	for {
+		if _, err := dataConn.Read(buf); err != nil {
+			if err != io.EOF {
+				fmt.Println("Error reading response: ", err)
+				return
+			}
+			break
+		}
+
+		if _, err := f.Write(buf); err != nil {
+			fmt.Println("Error writing to file: ", err)
+			return
+		}
+	}
+
 	cmdConn.ReadLine()
 }
 

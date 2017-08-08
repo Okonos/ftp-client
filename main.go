@@ -59,6 +59,8 @@ func promptLoop(cmdConn FTPCmdConn) {
 			cd(cmdConn, arg)
 		case "ls":
 			ls(cmdConn)
+		case "get":
+			get(cmdConn, arg)
 		case "exit", "quit":
 			quit(cmdConn)
 			return
@@ -98,6 +100,9 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+
+	// binary mode
+	cmdConn.Exec("TYPE I")
 
 	promptLoop(cmdConn)
 }
