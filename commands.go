@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 func pwd(cmdConn FTPCmdConn) {
@@ -61,8 +62,12 @@ func get(cmdConn FTPCmdConn, filename string) {
 	defer f.Close()
 
 	buf := make([]byte, 8192)
+	var bytesRcvd int
+	start := time.Now()
+
 	for {
-		if _, err := dataConn.Read(buf); err != nil {
+		n, err := dataConn.Read(buf)
+		if err != nil {
 			if err != io.EOF {
 				fmt.Println("Error reading response: ", err)
 				return
@@ -74,9 +79,15 @@ func get(cmdConn FTPCmdConn, filename string) {
 			fmt.Println("Error writing to file: ", err)
 			return
 		}
+
+		bytesRcvd += n
 	}
 
+	secs := float64(time.Now().Sub(start)) / float64(time.Second)
+
 	cmdConn.ReadLine()
+	fmt.Printf("%d bytes received in %.2f secs (%.4f MB/s)\n",
+		bytesRcvd, secs, float64(bytesRcvd/1024/1024)/secs)
 }
 
 func quit(cmdConn FTPCmdConn) {
