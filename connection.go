@@ -20,7 +20,7 @@ type FTPCmdConn interface {
 	ReadLine() (string, error)
 	Write(string) (int, error)
 	Exec(string) (string, error)
-	NewDataConn() (*FTPConn, error)
+	InitDataConn() (*FTPConn, error)
 	Close() error
 }
 
@@ -39,8 +39,8 @@ func NewFTPConn(host, port string) (*FTPConn, error) {
 	return &FTPConn{conn: tcpConn, buf: bufio.NewReader(tcpConn)}, nil
 }
 
-// NewDataConn : establish data connection
-func (c *FTPConn) NewDataConn() (*FTPConn, error) {
+// InitDataConn : establish data connection
+func (c *FTPConn) InitDataConn() (*FTPConn, error) {
 	response, err := c.Exec("PASV")
 	if err != nil {
 		return &FTPConn{}, err
@@ -87,5 +87,3 @@ func (c *FTPConn) Exec(cmd string) (line string, err error) {
 func (c *FTPConn) Close() error {
 	return c.conn.Close()
 }
-
-// type FTPDataConn struct {

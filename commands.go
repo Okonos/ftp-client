@@ -18,7 +18,7 @@ func cd(cmdConn FTPCmdConn, dir string) {
 }
 
 func ls(cmdConn FTPCmdConn) {
-	dataConn, err := cmdConn.NewDataConn() // NewFTPConn(parseHostPort(response))
+	dataConn, err := cmdConn.InitDataConn()
 	if err != nil {
 		fmt.Println("Could not initialize data connection: ", err)
 		return
@@ -37,7 +37,7 @@ func ls(cmdConn FTPCmdConn) {
 }
 
 func get(cmdConn FTPCmdConn, filename string) {
-	dataConn, err := cmdConn.NewDataConn()
+	dataConn, err := cmdConn.InitDataConn()
 	if err != nil {
 		fmt.Println("Could not initialize data connection: ", err)
 		return
