@@ -18,7 +18,8 @@ type FTPConn struct {
 type FTPCmdConn interface {
 	Read([]byte) (int, error)
 	ReadLine() (string, error)
-	Write(string) (int, error)
+	Write([]byte) (int, error)
+	WriteCmd(string) (int, error)
 	Exec(string) (string, error)
 	InitDataConn() (*FTPConn, error)
 	Close() error
@@ -73,13 +74,18 @@ func (c *FTPConn) ReadLine() (line string, err error) {
 	return
 }
 
-func (c *FTPConn) Write(msg string) (int, error) {
+func (c *FTPConn) Write(data []byte) (int, error) {
+	return c.conn.Write(data)
+}
+
+// WriteCmd : write string with crlf appended
+func (c *FTPConn) WriteCmd(msg string) (int, error) {
 	return c.conn.Write([]byte(msg + "\r\n"))
 }
 
 // Exec : Write command and read the response
 func (c *FTPConn) Exec(cmd string) (line string, err error) {
-	c.Write(cmd)
+	c.WriteCmd(cmd)
 	return c.ReadLine()
 }
 
