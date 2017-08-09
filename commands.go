@@ -68,11 +68,11 @@ func get(cmdConn FTPCmdConn, filename string) {
 	for {
 		n, err := dataConn.Read(buf)
 		if err != nil {
-			if err != io.EOF {
-				fmt.Println("Error reading response: ", err)
-				return
+			if err == io.EOF {
+				break
 			}
-			break
+			fmt.Println("Error reading response: ", err)
+			return
 		}
 
 		if _, err := f.Write(buf); err != nil {
