@@ -87,7 +87,61 @@ func get(cmdConn FTPCmdConn, filename string) {
 
 	cmdConn.ReadLine()
 	fmt.Printf("%d bytes received in %.2f secs (%.4f MB/s)\n",
-		bytesRcvd, secs, float64(bytesRcvd/1024/1024)/secs)
+		bytesRcvd, secs, float64(bytesRcvd/(1024*1024))/secs)
+}
+
+func put(cmdConn FTPCmdConn, filename string) {
+	dataConn, err := cmdConn.InitDataConn()
+	if err != nil {
+		fmt.Println("Could not initialize data connection: ", err)
+		return
+	}
+	defer dataConn.Close()
+
+	resp, err := cmdConn.Exec("STOR " + filename)
+	if err != nil {
+		fmt.Println("Error sending command: ", err)
+		return
+	}
+	// check for negative reply
+	if resp[0] == '4' || resp[0] == '5' {
+		return
+	}
+
+	f, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Error opening file: ", err)
+		return
+	}
+	defer f.Close()
+
+	buf := make([]byte, 8192)
+	var bytesSent int
+	start := time.Now()
+	for {
+		n, err := f.Read(buf)
+		if err != nil {
+			if err == io.EOF {
+				dataConn.Close()
+				break
+			}
+			fmt.Println("Error reading file: ", err)
+			return
+		}
+
+		if _, err := dataConn.Write(buf[:n]); err != nil {
+			fmt.Println("Error sending data: ", err)
+			return
+		}
+
+		bytesSent += n
+	}
+
+	secs := float64(time.Now().Sub(start)) / float64(time.Second)
+
+	cmdConn.ReadLine()
+	fmt.Printf("%d bytes sent in %.2f secs (%.4f MB/s)\n",
+		bytesSent, secs, float64(bytesSent/(1024*1024))/secs)
 }
 
 func quit(cmdConn FTPCmdConn) {

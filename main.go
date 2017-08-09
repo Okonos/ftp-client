@@ -69,7 +69,17 @@ func promptLoop(cmdConn FTPCmdConn) {
 		case "ls":
 			ls(cmdConn)
 		case "get":
+			if arg == "" {
+				fmt.Println("This command needs an argument.")
+				continue
+			}
 			get(cmdConn, arg)
+		case "put":
+			if arg == "" {
+				fmt.Println("This command needs an argument.")
+				continue
+			}
+			put(cmdConn, arg)
 		case "exit", "quit":
 			quit(cmdConn)
 			return
