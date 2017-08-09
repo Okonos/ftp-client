@@ -7,6 +7,9 @@ import (
 	"log"
 	"os"
 	"strings"
+	"syscall"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func readInput(prompt string) (text string, err error) {
@@ -17,6 +20,12 @@ func readInput(prompt string) (text string, err error) {
 		text = text[:len(text)-1] // cut the '\n'
 	}
 	return
+}
+
+func readPassword() (string, error) {
+	fmt.Print("Password: ")
+	bytePasswd, err := terminal.ReadPassword(int(syscall.Stdin))
+	return strings.TrimSpace(string(bytePasswd)), err
 }
 
 func parseArgs() (host, port string) {
@@ -87,8 +96,8 @@ func main() {
 
 	if name, err := readInput("Name: "); err == nil {
 		cmdConn.Exec("USER " + name)
-
-		if pass, err := readInput("Password: "); err == nil || err == io.EOF {
+		if pass, err := readPassword(); err == nil || err == io.EOF {
+			fmt.Println()
 			cmdConn.Exec("PASS " + pass)
 		} else {
 			log.Fatal(err)
