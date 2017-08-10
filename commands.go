@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -117,12 +118,20 @@ func put(cmdConn FTPCmdConn, filename string) {
 
 	buf := make([]byte, 8192)
 	var bytesSent int
-	start := time.Now()
+	fInfo, _ := f.Stat()
+	fileSize := fInfo.Size()
+	start, timer := time.Now(), time.Now()
+	c := make(chan int64)
+	go progressBar(fileSize, c)
+
 	for {
 		n, err := f.Read(buf)
 		if err != nil {
 			if err == io.EOF {
+				c <- int64(bytesSent)
+				<-c // for clean output
 				dataConn.Close()
+				fmt.Println()
 				break
 			}
 			fmt.Println("Error reading file: ", err)
@@ -135,6 +144,10 @@ func put(cmdConn FTPCmdConn, filename string) {
 		}
 
 		bytesSent += n
+		if time.Now().Sub(timer) > time.Millisecond*100 {
+			c <- int64(bytesSent)
+			timer = time.Now()
+		}
 	}
 
 	secs := float64(time.Now().Sub(start)) / float64(time.Second)
@@ -146,4 +159,18 @@ func put(cmdConn FTPCmdConn, filename string) {
 
 func quit(cmdConn FTPCmdConn) {
 	cmdConn.Exec("QUIT")
+}
+
+func progressBar(total int64, c chan int64) {
+	const barWidth = 50
+	for current := range c {
+		fraction := float64(current) / float64(total)
+		n := int(fraction * barWidth)
+		bar := strings.Repeat("#", n)
+		fmt.Printf("%d/%d bytes (%.2f%%) %s\r", current, total, fraction*100, bar)
+		if current == total {
+			c <- 0
+			return
+		}
+	}
 }
