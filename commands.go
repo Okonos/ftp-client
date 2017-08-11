@@ -157,10 +157,6 @@ func put(cmdConn FTPCmdConn, filename string) {
 		bytesSent, secs, float64(bytesSent/(1024*1024))/secs)
 }
 
-func quit(cmdConn FTPCmdConn) {
-	cmdConn.Exec("QUIT")
-}
-
 func progressBar(total int64, c chan int64) {
 	const barWidth = 50
 	for current := range c {
@@ -173,4 +169,15 @@ func progressBar(total int64, c chan int64) {
 			return
 		}
 	}
+}
+
+func printHelp() {
+	fmt.Println("Available commands:")
+	fmt.Printf("pwd\t\tcd\t\tls\n" +
+		"get\t\tput\t\texit/quit\n" +
+		"help/?\n")
+}
+
+func quit(cmdConn FTPCmdConn) {
+	cmdConn.Exec("QUIT")
 }

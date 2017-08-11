@@ -83,6 +83,8 @@ func promptLoop(cmdConn FTPCmdConn) {
 		case "exit", "quit":
 			quit(cmdConn)
 			return
+		case "help", "?":
+			printHelp()
 		default:
 			fmt.Fprintln(os.Stderr, "Invalid command")
 		}
