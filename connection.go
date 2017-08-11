@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
@@ -48,6 +50,9 @@ func (c *FTPConn) InitDataConn() (*FTPConn, error) {
 	}
 
 	start, end := strings.Index(response, "(")+1, strings.Index(response, ")")
+	if start == -1 || end == -1 {
+		return &FTPConn{}, errors.New("Received wrong response")
+	}
 	addr := strings.Split(response[start:end], ",")
 	host := strings.Join(addr[:4], ".")
 	var portVal int
