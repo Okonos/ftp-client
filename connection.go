@@ -16,13 +16,13 @@ type FTPConn struct {
 
 // FTPCmdConn : FTP command connection interface
 type FTPCmdConn interface {
-	Read([]byte) (int, error)
+	io.Reader
 	ReadLine() (string, error)
-	Write([]byte) (int, error)
+	io.Writer
 	WriteCmd(string) (int, error)
 	Exec(string) (string, error)
 	InitDataConn() (*FTPConn, error)
-	Close() error
+	io.Closer
 }
 
 // NewFTPConn : constructor for connection
