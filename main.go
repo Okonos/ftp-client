@@ -70,13 +70,13 @@ func promptLoop(cmdConn FTPCmdConn) {
 			ls(cmdConn)
 		case "get":
 			if arg == "" {
-				fmt.Println("This command needs an argument.")
+				fmt.Fprintln(os.Stderr, "This command needs an argument.")
 				continue
 			}
 			get(cmdConn, arg)
 		case "put":
 			if arg == "" {
-				fmt.Println("This command needs an argument.")
+				fmt.Fprintln(os.Stderr, "This command needs an argument.")
 				continue
 			}
 			put(cmdConn, arg)
@@ -84,7 +84,7 @@ func promptLoop(cmdConn FTPCmdConn) {
 			quit(cmdConn)
 			return
 		default:
-			fmt.Println("Invalid command")
+			fmt.Fprintln(os.Stderr, "Invalid command")
 		}
 	}
 }

@@ -21,7 +21,7 @@ func cd(cmdConn FTPCmdConn, dir string) {
 func ls(cmdConn FTPCmdConn) {
 	dataConn, err := cmdConn.InitDataConn()
 	if err != nil {
-		fmt.Println("Could not initialize data connection: ", err)
+		fmt.Fprintln(os.Stderr, "Could not initialize data connection: ", err)
 		return
 	}
 	defer dataConn.Close()
@@ -30,7 +30,7 @@ func ls(cmdConn FTPCmdConn) {
 	dataReader := bufio.NewReader(dataConn)
 	data, err := ioutil.ReadAll(dataReader)
 	if err != nil {
-		fmt.Println("Error reading response: ", err)
+		fmt.Fprintln(os.Stderr, "Error reading response: ", err)
 		return
 	}
 	fmt.Print(string(data))
@@ -38,29 +38,29 @@ func ls(cmdConn FTPCmdConn) {
 }
 
 func get(cmdConn FTPCmdConn, filename string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error creating file: ", err)
+		return
+	}
+	defer f.Close()
+
 	dataConn, err := cmdConn.InitDataConn()
 	if err != nil {
-		fmt.Println("Could not initialize data connection: ", err)
+		fmt.Fprintln(os.Stderr, "Could not initialize data connection: ", err)
 		return
 	}
 	defer dataConn.Close()
 
 	resp, err := cmdConn.Exec("RETR " + filename)
 	if err != nil {
-		fmt.Println("Error sending command: ", err)
+		fmt.Fprintln(os.Stderr, "Error sending command: ", err)
 		return
 	}
 	// check for negative reply
 	if resp[0] == '4' || resp[0] == '5' {
 		return
 	}
-
-	f, err := os.Create(filename)
-	if err != nil {
-		fmt.Println("Error creating file: ", err)
-		return
-	}
-	defer f.Close()
 
 	buf := make([]byte, 8192)
 	var bytesRcvd int
@@ -72,12 +72,12 @@ func get(cmdConn FTPCmdConn, filename string) {
 			if err == io.EOF {
 				break
 			}
-			fmt.Println("Error reading response: ", err)
+			fmt.Fprintln(os.Stderr, "Error reading response: ", err)
 			return
 		}
 
 		if _, err := f.Write(buf); err != nil {
-			fmt.Println("Error writing to file: ", err)
+			fmt.Fprintln(os.Stderr, "Error writing to file: ", err)
 			return
 		}
 
@@ -94,21 +94,21 @@ func get(cmdConn FTPCmdConn, filename string) {
 func put(cmdConn FTPCmdConn, filename string) {
 	f, err := os.Open(filename)
 	if err != nil {
-		fmt.Println("Error opening file: ", err)
+		fmt.Fprintln(os.Stderr, "Error opening file: ", err)
 		return
 	}
 	defer f.Close()
 
 	dataConn, err := cmdConn.InitDataConn()
 	if err != nil {
-		fmt.Println("Could not initialize data connection: ", err)
+		fmt.Fprintln(os.Stderr, "Could not initialize data connection: ", err)
 		return
 	}
 	defer dataConn.Close()
 
 	resp, err := cmdConn.Exec("STOR " + filename)
 	if err != nil {
-		fmt.Println("Error sending command: ", err)
+		fmt.Fprintln(os.Stderr, "Error sending command: ", err)
 		return
 	}
 	// check for negative reply
@@ -139,7 +139,7 @@ func put(cmdConn FTPCmdConn, filename string) {
 		}
 
 		if _, err := dataConn.Write(buf[:n]); err != nil {
-			fmt.Println("Error sending data: ", err)
+			fmt.Fprintln(os.Stderr, "Error sending data: ", err)
 			return
 		}
 
