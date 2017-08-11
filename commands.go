@@ -92,6 +92,13 @@ func get(cmdConn FTPCmdConn, filename string) {
 }
 
 func put(cmdConn FTPCmdConn, filename string) {
+	f, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Error opening file: ", err)
+		return
+	}
+	defer f.Close()
+
 	dataConn, err := cmdConn.InitDataConn()
 	if err != nil {
 		fmt.Println("Could not initialize data connection: ", err)
@@ -108,13 +115,6 @@ func put(cmdConn FTPCmdConn, filename string) {
 	if resp[0] == '4' || resp[0] == '5' {
 		return
 	}
-
-	f, err := os.Open(filename)
-	if err != nil {
-		fmt.Println("Error opening file: ", err)
-		return
-	}
-	defer f.Close()
 
 	buf := make([]byte, 8192)
 	var bytesSent int
