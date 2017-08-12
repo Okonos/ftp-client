@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -106,7 +107,7 @@ func put(cmdConn FTPCmdConn, filename string) {
 	}
 	defer dataConn.Close()
 
-	resp, err := cmdConn.Exec("STOR " + filename)
+	resp, err := cmdConn.Exec("STOR " + filepath.Base(filename))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error sending command: ", err)
 		return
