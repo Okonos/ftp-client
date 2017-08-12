@@ -159,7 +159,7 @@ func put(cmdConn FTPCmdConn, filename string) {
 }
 
 func progressBar(total int64, c chan int64) {
-	const barWidth = 50
+	const barWidth = 40
 	for current := range c {
 		fraction := float64(current) / float64(total)
 		n := int(fraction * barWidth)
