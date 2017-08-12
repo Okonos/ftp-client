@@ -164,7 +164,7 @@ func progressBar(total int64, c chan int64) {
 		fraction := float64(current) / float64(total)
 		n := int(fraction * barWidth)
 		bar := strings.Repeat("#", n)
-		fmt.Printf("%d/%d bytes (%.2f%%) %s\r", current, total, fraction*100, bar)
+		fmt.Printf("%.2f%% %-40s %d/%d bytes\r", fraction*100, bar, current, total)
 		if current == total {
 			c <- 0
 			return
